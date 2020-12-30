@@ -1,22 +1,102 @@
-<?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom">
-    <id>https://cosineren.github.io</id>
-    <title>狗剩</title>
-    <updated>2020-12-30T07:42:41.695Z</updated>
-    <generator>https://github.com/jpmonette/feed</generator>
-    <link rel="alternate" href="https://cosineren.github.io"/>
-    <link rel="self" href="https://cosineren.github.io/atom.xml"/>
-    <subtitle>温故而知新</subtitle>
-    <logo>https://cosineren.github.io/images/avatar.png</logo>
-    <icon>https://cosineren.github.io/favicon.ico</icon>
-    <rights>All rights reserved 2020, 狗剩</rights>
-    <entry>
-        <title type="html"><![CDATA[Go语言的调度模型（GPM）]]></title>
-        <id>https://cosineren.github.io/post/gou-sheng-sheng-gosine-gosine/</id>
-        <link href="https://cosineren.github.io/post/gou-sheng-sheng-gosine-gosine/">
-        </link>
-        <updated>2020-12-30T07:38:23.000Z</updated>
-        <content type="html"><![CDATA[<p>定义于src/runtime/runtime2.go</p>
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Go语言的调度模型（GPM） | 狗剩</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://cosineren.github.io/favicon.ico?v=1609314134531">
+<link rel="stylesheet" href="https://cosineren.github.io/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="定义于src/runtime/runtime2.go
+G: Gourtines（携带任务）, 每个Goroutine对应一个G结构体，G保存Goroutine的运行堆栈，即并发任务状态。G并非执行体，每个G需要绑定到P才能被调度执行。
+P:..." />
+    <meta name="keywords" content="" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://cosineren.github.io">
+        <img src="https://cosineren.github.io/images/avatar.png?v=1609314134531" class="site-logo">
+        <h1 class="site-title">狗剩</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      温故而知新
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://cosineren.github.io/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">Go语言的调度模型（GPM）</h2>
+            <div class="post-date">2020-12-30</div>
+            
+            <div class="post-content" v-pre>
+              <p>定义于src/runtime/runtime2.go</p>
 <p>G: Gourtines（携带任务）, 每个Goroutine对应一个G结构体，G保存Goroutine的运行堆栈，即并发任务状态。G并非执行体，每个G需要绑定到P才能被调度执行。<br>
 P: Processors（分配任务）, 对G来说，P相当于CPU核，G只有绑定到P(在P的local runq中)才能被调度。对M来说，P提供了相关的执行环境(Context)，如内存分配状态(mcache)，任务队列(G)等<br>
 M: Machine（寻找任务）, OS线程抽象，负责调度任务，和某个P绑定，从P的runq中不断取出G，切换堆栈并执行，M本身不具备执行状态，在需要任务切换时，M将堆栈状态写回G，任何其它M都能据此恢复执行。</p>
@@ -75,6 +155,37 @@ M，所有M是有线程栈的。如果不对该线程栈提供内存的话，系
 <p>Go比较优势的设计就是P上下文这个概念的出现，如果只有G和M的对应关系，那么当G阻塞在IO上的时候，M是没有实际在工作的，这样造成了资源的浪费，没有了P，那么所有G的列表都放在全局，这样导致临界区太大，对多核调度造成极大影响。</p>
 <p>保护现场的抢占式调度和G被阻塞后传递给其他m调用的核心思想，使得goroutine的产生。</p>
 <p>从线程调度讲，Go语言相比起其他语言的优势在于OS线程是由OS内核来调度的，goroutine则是由Go运行时（runtime）自己的调度器调度的，这个调度器使用一个称为m:n调度的技术（复用/调度m个goroutine到n个OS线程）。 其一大特点是goroutine的调度是在用户态下完成的， 不涉及内核态与用户态之间的频繁切换，包括内存的分配与释放，都是在用户态维护着一块大的内存池， 不直接调用系统的malloc函数（除非内存池需要改变），成本比调度OS线程低很多。 另一方面充分利用了多核的硬件资源，近似的把若干goroutine均分在物理线程上， 再加上本身goroutine的超轻量，以上种种保证了go调度方面的性能。</p>
-]]></content>
-    </entry>
-</feed>
+
+            </div>
+            
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+
+
+  </body>
+</html>
